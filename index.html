@@ -2,60 +2,107 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caught You!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CAUGHT</title>
     <style>
-        /* Reset and layout */
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* Prevents scrollbars during rotation */
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Arial Black', sans-serif;
+            background-color: black;
+            cursor: pointer;
+            user-select: none; /* Prevents text selection while holding down */
+            -webkit-user-select: none;
         }
 
-        /* The main animation container */
-        .container {
+        .active-container {
             width: 100vw;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Applies both the barrel roll and the flashing color */
-            animation: barrelRoll 4s ease-in-out forwards, flashColors 0.5s infinite;
+            animation: barrelRoll 4s ease-in-out forwards, flashColors 0.3s infinite;
         }
 
-        /* Barrel Roll: 3 full rotations (360 * 3 = 1080) */
         @keyframes barrelRoll {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(1080deg); }
         }
 
-        /* Flashing: Rapidly switch between blue and red */
         @keyframes flashColors {
             0%, 49% { background-color: blue; }
             50%, 100% { background-color: red; }
         }
 
-        /* Text styling */
         h1 {
             color: white;
-            font-size: 5rem;
-            text-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+            font-size: clamp(2rem, 10vw, 5rem); /* Responsive text size */
             text-transform: uppercase;
             text-align: center;
+            display: none;
+            pointer-events: none; /* Allows clicks to pass through to the body */
         }
     </style>
 </head>
-<body>
+<body onmousedown="startTimer()" onmouseup="clearTimer()" ontouchstart="startTimer()" ontouchend="clearTimer()">
 
-    <div class="container">
-        <h1>WE CAUGHT YOU</h1>
+    <div id="mainBox">
+        <h1 id="msg">WE CAUGHT YOU</h1>
     </div>
 
+    <script>
+        let pressTimer;
+        let isActive = false;
+
+        function startTrap() {
+            if (isActive) return;
+            isActive = true;
+
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) { elem.requestFullscreen(); } 
+            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+
+            document.getElementById('mainBox').classList.add('active-container');
+            document.getElementById('msg').style.display = 'block';
+        }
+
+        // Logic for the Secret Exit
+        function release() {
+            isActive = false;
+            document.getElementById('mainBox').classList.remove('active-container');
+            document.getElementById('msg').innerText = "RELEASED";
+            document.body.style.backgroundColor = "white";
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+        }
+
+        // Timer for Long Press (3 seconds)
+        function startTimer() {
+            if (!isActive) {
+                startTrap();
+            }
+            pressTimer = window.setTimeout(function() {
+                release();
+            }, 3000); // 3000ms = 3 seconds
+        }
+
+        function clearTimer() {
+            clearTimeout(pressTimer);
+        }
+
+        // Physical Keyboard Exit (B key)
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'b' || e.key === 'B') {
+                release();
+            } else {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
 </body>
 </html>
